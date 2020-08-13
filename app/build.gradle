@@ -40,6 +40,8 @@ dependencies {
     implementation 'com.aliyun.ams:alicloud-android-httpdns:1.2.5'
     testImplementation 'junit:junit:4.12'
 
+    implementation 'io.agora.rtc:full-sdk:3.0.1'
+
     // ijkplayer
     implementation 'tv.danmaku.ijk.media:ijkplayer-java:0.8.8'
     implementation 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.8.8'
