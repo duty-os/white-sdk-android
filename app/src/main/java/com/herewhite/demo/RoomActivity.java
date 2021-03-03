@@ -1,36 +1,25 @@
 package com.herewhite.demo;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SurfaceView;
-import android.view.View;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.alibaba.sdk.android.httpdns.HttpDns;
 import com.alibaba.sdk.android.httpdns.HttpDnsService;
 import com.google.gson.Gson;
 import com.herewhite.sdk.AbstractCommonCallbacks;
-import com.herewhite.sdk.CommonCallbacks;
-import com.herewhite.sdk.domain.AnimationMode;
-import com.herewhite.sdk.domain.FontFace;
-import com.herewhite.sdk.domain.Scene;
 import com.herewhite.sdk.AbstractRoomCallbacks;
 import com.herewhite.sdk.Converter;
 import com.herewhite.sdk.ConverterCallbacks;
@@ -40,9 +29,8 @@ import com.herewhite.sdk.RoomParams;
 import com.herewhite.sdk.WhiteSdk;
 import com.herewhite.sdk.WhiteSdkConfiguration;
 import com.herewhite.sdk.WhiteboardView;
-import com.herewhite.sdk.domain.Point;
-import com.herewhite.sdk.domain.EventListener;
 import com.herewhite.sdk.domain.AkkoEvent;
+import com.herewhite.sdk.domain.AnimationMode;
 import com.herewhite.sdk.domain.Appliance;
 import com.herewhite.sdk.domain.BroadcastState;
 import com.herewhite.sdk.domain.CameraBound;
@@ -52,19 +40,21 @@ import com.herewhite.sdk.domain.ConversionInfo;
 import com.herewhite.sdk.domain.ConvertException;
 import com.herewhite.sdk.domain.ConvertedFiles;
 import com.herewhite.sdk.domain.EventEntry;
+import com.herewhite.sdk.domain.EventListener;
+import com.herewhite.sdk.domain.FontFace;
 import com.herewhite.sdk.domain.GlobalState;
 import com.herewhite.sdk.domain.ImageInformationWithUrl;
 import com.herewhite.sdk.domain.MemberState;
+import com.herewhite.sdk.domain.Point;
 import com.herewhite.sdk.domain.PptPage;
 import com.herewhite.sdk.domain.Promise;
 import com.herewhite.sdk.domain.RectangleConfig;
 import com.herewhite.sdk.domain.RoomPhase;
 import com.herewhite.sdk.domain.RoomState;
 import com.herewhite.sdk.domain.SDKError;
-import com.herewhite.sdk.domain.UrlInterrupter;
+import com.herewhite.sdk.domain.Scene;
 import com.herewhite.sdk.domain.ViewMode;
 import com.herewhite.sdk.domain.WhiteDisplayerState;
-import com.herewhite.sdk.domain.WhiteObject;
 
 import org.json.JSONObject;
 
@@ -73,37 +63,13 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import io.agora.rtc.IRtcEngineEventHandler;
-import io.agora.rtc.RtcEngine;
-import io.agora.rtc.video.VideoCanvas;
-import io.agora.rtc.video.VideoEncoderConfiguration;
 import wendu.dsbridge.DWebView;
 
 public class RoomActivity extends AppCompatActivity {
-
-    /** 和 iOS 名字一致 */
+    /**
+     * 和 iOS 名字一致
+     */
     final String EVENT_NAME = "WhiteCommandCustomEvent";
-
-    // rtc 客户端
-    private RtcEngine mRtcEngine;
-    private static final int PERMISSION_REQ_ID = 22;
-
-    // 如果需要保存 rtc 日志到 sdk 卡就需要 WRITE_EXTERNAL_STORAGE 权限
-    private static final String[] REQUESTED_PERMISSIONS = {
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.CAMERA,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-    };
-    // rtc 远端视频窗口
-    private FrameLayout mLocalContainer;
-    // rtc 本地视频窗口
-    private FrameLayout mRemoteContainer;
-    private SurfaceView mLocalView;
-    private SurfaceView mRemoteView;
-    private boolean mCallEnd = true;
-    private ImageView mCallBtn;
 
     final String SCENE_DIR = "/dir";
     final String ROOM_INFO = "room info";
@@ -114,68 +80,9 @@ public class RoomActivity extends AppCompatActivity {
     private String uuid;
     private String roomToken;
 
-    private WhiteSdk whiteSdk;
-
     WhiteboardView whiteboardView;
     WhiteSdk whiteSdk;
     Room room;
-
-    // rtc 回调
-    private final IRtcEngineEventHandler mRtcEventHandler = new IRtcEngineEventHandler() {
-        @Override
-        // 注册 onJoinChannelSuccess 回调。
-        // 本地用户成功加入频道时，会触发该回调。
-        public void onJoinChannelSuccess(String channel, final int uid, int elapsed) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.i("agora","Join channel success, uid: " + (uid & 0xFFFFFFFFL));
-                }
-            });
-        }
-
-        @Override
-        // 注册 onFirstRemoteVideoDecoded 回调。
-        // SDK 接收到第一帧远端视频并成功解码时，会触发该回调。
-        // 可以在该回调中调用 setupRemoteVideo 方法设置远端视图。
-        public void onFirstRemoteVideoDecoded(final int uid, int width, int height, int elapsed) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.i("agora","First remote video decoded, uid: " + (uid & 0xFFFFFFFFL));
-                    setupRemoteVideo(uid);
-                }
-            });
-        }
-
-        private void setupRemoteVideo(int uid) {
-            mRemoteView = RtcEngine.CreateRendererView(getBaseContext());
-            mRemoteContainer.addView(mRemoteView);
-            // 设置远端视图。
-            mRtcEngine.setupRemoteVideo(new VideoCanvas(mRemoteView, VideoCanvas.RENDER_MODE_HIDDEN, uid));
-        }
-
-
-        @Override
-        // 注册 onUserOffline 回调。
-        // 远端用户离开频道或掉线时，会触发该回调。
-        public void onUserOffline(final int uid, int reason) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.i("agora","User offline, uid: " + (uid & 0xFFFFFFFFL));
-                }
-            });
-        }
-
-        @Override
-        // 混音状态变化时的回调
-        public void onAudioMixingStateChanged(int state, int errorCode) {
-            if (whiteSdk != null) {
-                whiteSdk.getAudioMixerImplement().setMediaState(state, errorCode);
-            }
-        }
-    };
 
     /**
      * 自定义 GlobalState 示例
@@ -195,20 +102,8 @@ public class RoomActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_room);
-
-        // 如果用户需要用到 rtc 混音功能来解决回声和声音抑制问题，那么必须要在 whiteSDK 之前初始化 rtcEngine
-        if (checkSelfPermission(REQUESTED_PERMISSIONS[0], PERMISSION_REQ_ID) &&
-                checkSelfPermission(REQUESTED_PERMISSIONS[1], PERMISSION_REQ_ID) &&
-                checkSelfPermission(REQUESTED_PERMISSIONS[2], PERMISSION_REQ_ID)) {
-            initializeEngine();
-            setupVideoConfig();
-        }
-        mCallBtn = findViewById(R.id.btn_call);
-        mLocalContainer = findViewById(R.id.local_video_view_container);
-        mRemoteContainer = findViewById(R.id.remote_video_view_container);
 
         whiteboardView = findViewById(R.id.white);
         DWebView.setWebContentsDebuggingEnabled(true);
@@ -234,103 +129,13 @@ public class RoomActivity extends AppCompatActivity {
         }
     }
 
-    // 初始化 RtcEngine 对象
-    private void initializeEngine() {
-        try {
-            mRtcEngine = RtcEngine.create(getBaseContext(), getString(R.string.rtc_app_id), mRtcEventHandler);
-        } catch (Exception e) {
-            Log.e("TAG", Log.getStackTraceString(e));
-            throw new RuntimeException("NEED TO check rtc sdk init fatal error\n" + Log.getStackTraceString(e));
-        }
-    }
-
-    private void setupVideoConfig() {
-        // In simple use cases, we only need to enable video capturing
-        // and rendering once at the initialization step.
-        // Note: audio recording and playing is enabled by default.
-        mRtcEngine.enableVideo();
-        // 详细设置查看 rtc 文档
-        mRtcEngine.setVideoEncoderConfiguration(new VideoEncoderConfiguration(
-                VideoEncoderConfiguration.VD_640x360,
-                VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15,
-                VideoEncoderConfiguration.STANDARD_BITRATE,
-                VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_FIXED_PORTRAIT));
-    }
-
-    private boolean checkSelfPermission(String permission, int requestCode) {
-        if (ContextCompat.checkSelfPermission(this, permission) !=
-                PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, REQUESTED_PERMISSIONS, requestCode);
-            return false;
-        }
-        return true;
-    }
-
-    private void setupLocalVideo() {
-        mLocalView = RtcEngine.CreateRendererView(getBaseContext());
-        mLocalView.setZOrderMediaOverlay(true);
-        mLocalContainer.addView(mLocalView);
-        mRtcEngine.setupLocalVideo(new VideoCanvas(mLocalView, VideoCanvas.RENDER_MODE_HIDDEN, 0));
-    }
-
-    public void onCallClicked(View view) {
-        if (mCallEnd) {
-            startCall();
-            mCallEnd = false;
-            mCallBtn.setImageResource(R.drawable.btn_endcall);
-        } else {
-            endCall();
-            mCallEnd = true;
-            mCallBtn.setImageResource(R.drawable.btn_startcall);
-        }
-    }
-
-    private void startCall() {
-        setupLocalVideo();
-        joinChannel();
-    }
-
-    private void endCall() {
-        removeLocalVideo();
-        removeRemoteVideo();
-        leaveChannel();
-    }
-
-    private void removeLocalVideo() {
-        if (mLocalView != null) {
-            mLocalContainer.removeView(mLocalView);
-        }
-        mLocalView = null;
-    }
-
-    private void removeRemoteVideo() {
-        if (mRemoteView != null) {
-            mRemoteContainer.removeView(mRemoteView);
-        }
-        mRemoteView = null;
-    }
-
-    private void leaveChannel() {
-        mRtcEngine.leaveChannel();
-    }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        leaveChannel();
-        RtcEngine.destroy();
     }
 
-    /**
-     * 加入 rtc 频道
-     */
-    private void joinChannel() {
-        // 这里没有使用 token 加入频道，推荐使用 token 保证应用安全，详细设置参考 rtc 文档
-        mRtcEngine.joinChannel(null, "demoChannel1", "Extra Optional Data", 0);
-    }
-
-
-        //region room
+    //region room
     private void createRoom() {
         demoAPI.getNewRoom(new DemoAPI.Result() {
             @Override
@@ -373,7 +178,7 @@ public class RoomActivity extends AppCompatActivity {
 
         //动态 ppt 需要的自定义字体，如果没有使用，无需调用
         HashMap<String, String> map = new HashMap<>();
-        map.put("宋体","https://your-cdn.com/Songti.ttf");
+        map.put("宋体", "https://your-cdn.com/Songti.ttf");
         sdkConfiguration.setFonts(map);
 
         //图片替换 API，需要在 whiteSDKConfig 中先行调用 setHasUrlInterrupterAPI，进行设置，否则不会被回调。
@@ -474,7 +279,6 @@ public class RoomActivity extends AppCompatActivity {
 
     //region private
     private void alert(final String title, final String detail) {
-
         runOnUiThread(new Runnable() {
             public void run() {
                 AlertDialog alertDialog = new AlertDialog.Builder(RoomActivity.this).create();
@@ -514,13 +318,13 @@ public class RoomActivity extends AppCompatActivity {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        logRoomInfo( "width:" + whiteboardView.getWidth() / getResources().getDisplayMetrics().density + " height: " + whiteboardView.getHeight() / getResources().getDisplayMetrics().density);
+        logRoomInfo("width:" + whiteboardView.getWidth() / getResources().getDisplayMetrics().density + " height: " + whiteboardView.getHeight() / getResources().getDisplayMetrics().density);
         // onConfigurationChanged 调用时，横竖屏切换并没有完成，需要延迟调用
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 room.refreshViewSize();
-                logRoomInfo( "width:" + whiteboardView.getWidth() / getResources().getDisplayMetrics().density + " height: " + whiteboardView.getHeight() / getResources().getDisplayMetrics().density);
+                logRoomInfo("width:" + whiteboardView.getWidth() / getResources().getDisplayMetrics().density + " height: " + whiteboardView.getHeight() / getResources().getDisplayMetrics().density);
             }
         }, 1000);
     }
@@ -688,7 +492,7 @@ public class RoomActivity extends AppCompatActivity {
 
     public void staticConvert(MenuItem item) {
         Converter c = new Converter(this.roomToken);
-        c.startConvertTask("https://white-cn-edge-doc-convert.oss-cn-hangzhou.aliyuncs.com/LightWaves.pdf", Converter.ConvertType.Static, new ConverterCallbacks(){
+        c.startConvertTask("https://white-cn-edge-doc-convert.oss-cn-hangzhou.aliyuncs.com/LightWaves.pdf", Converter.ConvertType.Static, new ConverterCallbacks() {
             @Override
             public void onFailure(ConvertException e) {
                 logAction(e.getMessage());
@@ -710,7 +514,7 @@ public class RoomActivity extends AppCompatActivity {
 
     public void dynamicConvert(MenuItem item) {
         Converter c = new Converter(this.roomToken);
-        c.startConvertTask("https://white-cn-edge-doc-convert.oss-cn-hangzhou.aliyuncs.com/-1/1.pptx", Converter.ConvertType.Dynamic, new ConverterCallbacks(){
+        c.startConvertTask("https://white-cn-edge-doc-convert.oss-cn-hangzhou.aliyuncs.com/-1/1.pptx", Converter.ConvertType.Dynamic, new ConverterCallbacks() {
             @Override
             public void onFailure(ConvertException e) {
                 logAction(e.getMessage());
@@ -778,7 +582,7 @@ public class RoomActivity extends AppCompatActivity {
     public void insertPPT(MenuItem item) {
         logAction();
         room.putScenes(SCENE_DIR, new Scene[]{
-            new Scene("page2", new PptPage("https://white-pan.oss-cn-shanghai.aliyuncs.com/101/image/alin-rusu-1239275-unsplash_opt.jpg", 600d, 600d))
+                new Scene("page2", new PptPage("https://white-pan.oss-cn-shanghai.aliyuncs.com/101/image/alin-rusu-1239275-unsplash_opt.jpg", 600d, 600d))
         }, 0);
         room.setScenePath(SCENE_DIR + "/page2");
     }
