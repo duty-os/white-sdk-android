@@ -9,11 +9,13 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.herewhite.sdk.WhiteSdk;
+import com.herewhite.sdk.WhiteboardView;
 
 import io.agora.rtc.IRtcEngineEventHandler;
 import io.agora.rtc.RtcEngine;
@@ -39,6 +41,8 @@ public class MainRtcActivity extends AppCompatActivity {
     private RtcEngine mRtcEngine;
     private boolean mCallEnd = true;
 
+    // Whiteboard
+    private WhiteboardView mWhiteboardView;
     private WhiteSdk mWhiteSdk;
 
     @Override
@@ -46,16 +50,30 @@ public class MainRtcActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_rtc);
 
+        mCallBtn = findViewById(R.id.btn_call);
+        mLocalContainer = findViewById(R.id.local_video_view_container);
+        mRemoteContainer = findViewById(R.id.remote_video_view_container);
+        mWhiteboardView = findViewById(R.id.whiteboardView);
+
         // 如果用户需要用到 rtc 混音功能来解决回声和声音抑制问题，那么必须要在 whiteSDK 之前初始化 rtcEngine
+        checkAndInitRtcEngine();
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        checkAndInitRtcEngine();
+    }
+
+    private void checkAndInitRtcEngine() {
         if (checkSelfPermission(REQUESTED_PERMISSIONS[0], PERMISSION_REQ_ID) &&
                 checkSelfPermission(REQUESTED_PERMISSIONS[1], PERMISSION_REQ_ID) &&
                 checkSelfPermission(REQUESTED_PERMISSIONS[2], PERMISSION_REQ_ID)) {
             initializeEngine();
             setupVideoConfig();
+            initWhiteboard();
         }
-        mCallBtn = findViewById(R.id.btn_call);
-        mLocalContainer = findViewById(R.id.local_video_view_container);
-        mRemoteContainer = findViewById(R.id.remote_video_view_container);
     }
 
     @Override
@@ -100,7 +118,6 @@ public class MainRtcActivity extends AppCompatActivity {
             mRtcEngine.setupRemoteVideo(new VideoCanvas(mRemoteView, VideoCanvas.RENDER_MODE_HIDDEN, uid));
         }
 
-
         @Override
         // 注册 onUserOffline 回调。
         // 远端用户离开频道或掉线时，会触发该回调。
@@ -143,6 +160,10 @@ public class MainRtcActivity extends AppCompatActivity {
                 VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15,
                 VideoEncoderConfiguration.STANDARD_BITRATE,
                 VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_FIXED_PORTRAIT));
+    }
+
+    private void initWhiteboard() {
+        // TODO create WhiteBoard Ref App Module
     }
 
     private boolean checkSelfPermission(String permission, int requestCode) {

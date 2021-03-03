@@ -31,6 +31,8 @@ dependencies {
 
     implementation project(':sdk')
     implementation 'io.agora.rtc:full-sdk:3.0.1'
+    // TODO
+    implementation 'com.aliyun.ams:alicloud-android-httpdns:1.2.5'
 
     // test
     testImplementation 'junit:junit:4.+'

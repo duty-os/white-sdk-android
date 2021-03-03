@@ -28,3 +28,6 @@
 -dontwarn com.google.android.material.**
 -dontnote com.google.android.material.**
 -dontwarn androidx.**
+
+# agora rtc
+-keep class io.agora.**{*;}

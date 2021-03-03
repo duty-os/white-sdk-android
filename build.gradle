@@ -30,6 +30,10 @@ allprojects {
         google()
         maven { url 'https://maven.aliyun.com/nexus/content/repositories/releases/' }
     }
+
+    configurations.all {
+        resolutionStrategy.force 'androidx.appcompat:appcompat:1.2.0'
+    }
 }
 
 task clean(type: Delete) {
