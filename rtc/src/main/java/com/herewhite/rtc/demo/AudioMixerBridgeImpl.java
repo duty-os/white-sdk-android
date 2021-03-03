@@ -1,4 +1,4 @@
-package com.herewhite.demo;
+package com.herewhite.rtc.demo;
 
 import android.util.Log;
 
@@ -11,9 +11,11 @@ import io.agora.rtc.RtcEngine;
  */
 public class AudioMixerBridgeImpl implements AudioMixerBridge {
     private RtcEngine rtcEngine;
+
     public AudioMixerBridgeImpl(RtcEngine rtcEngine) {
         this.rtcEngine = rtcEngine;
     }
+
     @Override
     public void startAudioMixing(String filepath, boolean loopback, boolean replace, int cycle) {
         rtcEngine.startAudioMixing(filepath, loopback, replace, cycle);

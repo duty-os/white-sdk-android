@@ -29,20 +29,19 @@ import okhttp3.Response;
  */
 
 public class DemoAPI {
+    private static final String TAG = DemoAPI.class.getSimpleName();
+    private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
-    static final MediaType JSON
-            = MediaType.parse("application/json; charset=utf-8");
     private static final String sdkToken = "WHITEcGFydG5lcl9pZD1OZ3pwQWNBdlhiemJERW9NY0E0Z0V3RTUwbVZxM0NIbDJYV0Ymc2lnPWNiZWExOTMwNzc1NmQyNmU3N2U3M2Q0NWZjNTZiOGIwMWE2ZjU4NDI6YWRtaW5JZD0yMTYmcm9sZT1hZG1pbiZleHBpcmVfdGltZT0xNTg5ODMzNTQxJmFrPU5nenBBY0F2WGJ6YkRFb01jQTRnRXdFNTBtVnEzQ0hsMlhXRiZjcmVhdGVfdGltZT0xNTU4Mjc2NTg5Jm5vbmNlPTE1NTgyNzY1ODg4NDQwMA";
     private static final String host = "https://cloudcapiv4.herewhite.com";
+
+    private String AppIdentifier = "792/uaYcRG0I7ctP9A";
+    private String demoUUID = "7e7c8f007a4011eba97639a3a8d1dde1";
+    private String demoRoomToken = "NETLESSROOM_YWs9M2R5WmdQcFlLcFlTdlQ1ZjRkOFBiNjNnY1RoZ3BDSDlwQXk3Jm5vbmNlPTE2MTQ1NzAyOTg2NzgwMCZyb2xlPTAmc2lnPWIzZjY1NzQ2ZDJhOWU5Y2FjZmI3MzVlMGI5YWRkMjFhY2I1NjkwZTBlMWE2MWZkMjQ0NGE2ZmI2MWJlNDBhODImdXVpZD03ZTdjOGYwMDdhNDAxMWViYTk3NjM5YTNhOGQxZGRlMQ";
 
     public String getAppIdentifier() {
         return AppIdentifier;
     }
-    private String TAG = "demo api";
-    private String AppIdentifier = "792/uaYcRG0I7ctP9A";
-    private String demoUUID = "b8d56a60dd1411ea907ea3e91a336099";
-    private String demoRoomToken = "WHITEcGFydG5lcl9pZD14NGFfY1JDV09hbzItNEYtJnNpZz0wMTQ3OTcxM2Q5YjE0NDM0ODAwN2YzYmMzMGZkM2YyMzEwZDQ1ODYyOmFrPXg0YV9jUkNXT2FvMi00Ri0mY3JlYXRlX3RpbWU9MTU5NzI4OTE2NjIxNyZleHBpcmVfdGltZT0xNjI4ODI1MTY2MjE3Jm5vbmNlPTE1OTcyODkxNjYyMTcwMCZyb2xlPXJvb20mcm9vbUlkPWI4ZDU2YTYwZGQxNDExZWE5MDdlYTNlOTFhMzM2MDk5JnRlYW1JZD0yODM";
-
 
     String getDemoUUID() {
         return demoUUID;
@@ -61,6 +60,7 @@ public class DemoAPI {
 
     interface Result {
         void success(String uuid, String roomToken);
+
         void fail(String message);
     }
 

@@ -1,6 +1,7 @@
 package com.herewhite.sdk;
 
 import android.content.Context;
+
 import androidx.annotation.Nullable;
 
 import com.google.gson.JsonObject;
