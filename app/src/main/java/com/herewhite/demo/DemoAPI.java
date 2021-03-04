@@ -35,15 +35,20 @@ public class DemoAPI {
     private static final String sdkToken = "WHITEcGFydG5lcl9pZD1OZ3pwQWNBdlhiemJERW9NY0E0Z0V3RTUwbVZxM0NIbDJYV0Ymc2lnPWNiZWExOTMwNzc1NmQyNmU3N2U3M2Q0NWZjNTZiOGIwMWE2ZjU4NDI6YWRtaW5JZD0yMTYmcm9sZT1hZG1pbiZleHBpcmVfdGltZT0xNTg5ODMzNTQxJmFrPU5nenBBY0F2WGJ6YkRFb01jQTRnRXdFNTBtVnEzQ0hsMlhXRiZjcmVhdGVfdGltZT0xNTU4Mjc2NTg5Jm5vbmNlPTE1NTgyNzY1ODg4NDQwMA";
     private static final String host = "https://cloudcapiv4.herewhite.com";
 
-    private String AppIdentifier = "792/uaYcRG0I7ctP9A";
+    private String appId = "792/uaYcRG0I7ctP9A";
     private String demoUUID = "7e7c8f007a4011eba97639a3a8d1dde1";
     private String demoRoomToken = "NETLESSROOM_YWs9M2R5WmdQcFlLcFlTdlQ1ZjRkOFBiNjNnY1RoZ3BDSDlwQXk3Jm5vbmNlPTE2MTQ1NzAyOTg2NzgwMCZyb2xlPTAmc2lnPWIzZjY1NzQ2ZDJhOWU5Y2FjZmI3MzVlMGI5YWRkMjFhY2I1NjkwZTBlMWE2MWZkMjQ0NGE2ZmI2MWJlNDBhODImdXVpZD03ZTdjOGYwMDdhNDAxMWViYTk3NjM5YTNhOGQxZGRlMQ";
 
+    @Deprecated
     public String getAppIdentifier() {
-        return AppIdentifier;
+        return appId;
     }
 
-    String getDemoUUID() {
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getDemoUUID() {
         return demoUUID;
     }
 
@@ -54,18 +59,17 @@ public class DemoAPI {
         return demoUUID.length() > 0 && demoRoomToken.length() > 0;
     }
 
-    boolean validateToken() {
+    public boolean validateToken() {
         return hasDemoInfo() || sdkToken.length() > 50;
     }
 
-    interface Result {
-        void success(String uuid, String roomToken);
+    public interface Result {
+        void success(String uuid, String token);
 
         void fail(String message);
     }
 
-    void getNewRoom(final Result result) {
-
+    public void getNewRoom(final Result result) {
         if (hasDemoInfo()) {
             result.success(demoUUID, demoRoomToken);
             return;
@@ -115,8 +119,7 @@ public class DemoAPI {
         call.enqueue(callback);
     }
 
-    void getRoomToken(final String uuid, final Result result) {
-
+    public void getRoomToken(final String uuid, final Result result) {
         if (uuid.equals(demoUUID)) {
             result.success(demoUUID, demoRoomToken);
             return;
@@ -155,7 +158,7 @@ public class DemoAPI {
         });
     }
 
-    void downloadZip(String zipUrl, String des) {
+    public void downloadZip(String zipUrl, String des) {
         Request request = new Request.Builder().url(zipUrl).build();
         Call call = client.newCall(request);
         call.enqueue(new Callback() {
@@ -187,13 +190,10 @@ public class DemoAPI {
         });
     }
 
-    public static void unzip(File zipFile, File targetDirectory) throws IOException {
-        ZipInputStream zis = new ZipInputStream(
-                new BufferedInputStream(new FileInputStream(zipFile)));
+    private static void unzip(File zipFile, File targetDirectory) throws IOException {
+        ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(zipFile)));
         try {
             ZipEntry ze;
-            int count;
-            byte[] buffer = new byte[8192];
             while ((ze = zis.getNextEntry()) != null) {
                 File file = new File(targetDirectory, ze.getName());
                 File dir = ze.isDirectory() ? file : file.getParentFile();
@@ -204,6 +204,8 @@ public class DemoAPI {
                     continue;
                 FileOutputStream fout = new FileOutputStream(file);
                 try {
+                    int count;
+                    byte[] buffer = new byte[8192];
                     while ((count = zis.read(buffer)) != -1)
                         fout.write(buffer, 0, count);
                 } finally {
