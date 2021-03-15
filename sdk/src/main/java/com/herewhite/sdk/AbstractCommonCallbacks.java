@@ -4,6 +4,7 @@ import com.herewhite.sdk.domain.SDKError;
 
 import org.json.JSONObject;
 
+@Deprecated
 public class AbstractCommonCallbacks implements CommonCallbacks {
 
     /**

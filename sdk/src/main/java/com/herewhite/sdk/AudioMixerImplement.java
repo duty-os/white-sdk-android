@@ -1,15 +1,10 @@
 package com.herewhite.sdk;
 
-import android.webkit.JavascriptInterface;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 public class AudioMixerImplement {
+    private final JsBridgeInterface bridge;
 
-    AudioMixerImplement(JsBridgeInterface bridge, AudioMixerBridge mixerBridge) {
+    AudioMixerImplement(JsBridgeInterface bridge) {
         this.bridge = bridge;
-        this.mixerBridge = mixerBridge;
     }
 
     /**
@@ -23,40 +18,6 @@ public class AudioMixerImplement {
      * @param errorCode 当播放失败时，该值有意义
      */
     public void setMediaState(long state, long errorCode) {
-        this.bridge.callHandler("rtc.callback", new Object[]{state, errorCode});
-    }
-
-    private JsBridgeInterface bridge;
-    private AudioMixerBridge mixerBridge;
-
-    @JavascriptInterface
-    public void startAudioMixing(Object args) {
-        if (this.mixerBridge != null && args instanceof JSONObject) {
-            JSONObject jsonObject = (JSONObject) args;
-            try {
-                String filePath = jsonObject.getString("filePath");
-                boolean loopback = jsonObject.getBoolean("loopback");
-                boolean replace = jsonObject.getBoolean("replace");
-                int cycle = jsonObject.getInt("cycle");
-                this.mixerBridge.startAudioMixing(filePath, loopback, replace, cycle);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @JavascriptInterface
-    public void stopAudioMixing(Object args) {
-        if (this.mixerBridge != null) {
-            this.mixerBridge.stopAudioMixing();
-        }
-    }
-
-    @JavascriptInterface
-    public void setAudioMixingPosition(Object args) {
-        if (this.mixerBridge != null) {
-            int pos = Integer.valueOf((Integer) args);
-            this.mixerBridge.setAudioMixingPosition(pos);
-        }
+        bridge.callHandler("rtc.callback", new Object[]{state, errorCode});
     }
 }

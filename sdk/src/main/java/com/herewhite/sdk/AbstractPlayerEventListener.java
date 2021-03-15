@@ -8,7 +8,7 @@ import com.herewhite.sdk.domain.SDKError;
 /**
  * Created by buhe on 2018/8/12.
  */
-
+@Deprecated
 public abstract class AbstractPlayerEventListener implements PlayerEventListener {
 
     @Override

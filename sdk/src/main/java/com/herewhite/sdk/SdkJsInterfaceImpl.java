@@ -14,20 +14,16 @@ import androidx.annotation.Nullable;
 
 class SdkJsInterfaceImpl {
     @Nullable
-    private CommonCallbacks commonCallbacks;
+    private CommonCallback commonCallback;
     @Nullable
     private UrlInterrupter urlInterrupter;
 
-    public SdkJsInterfaceImpl() {
-
-    }
-
-    public SdkJsInterfaceImpl(CommonCallbacks commonCallbacks) {
-        this.commonCallbacks = commonCallbacks;
+    public SdkJsInterfaceImpl(CommonCallback commonCallback) {
+        this.commonCallback = commonCallback;
     }
 
     public void setCommonCallbacks(@Nullable CommonCallbacks commonCallbacks) {
-        this.commonCallbacks = commonCallbacks;
+        this.commonCallback = commonCallbacks;
     }
 
     public void setUrlInterrupter(@Nullable UrlInterrupter urlInterrupter) {
@@ -41,8 +37,8 @@ class SdkJsInterfaceImpl {
 
     @JavascriptInterface
     public String urlInterrupter(Object args) {
-        if (commonCallbacks != null) {
-            return commonCallbacks.urlInterrupter(String.valueOf(args));
+        if (commonCallback != null) {
+            return commonCallback.urlInterrupter(String.valueOf(args));
         } else if (urlInterrupter == null) {
             return String.valueOf(args);
         }
@@ -52,8 +48,8 @@ class SdkJsInterfaceImpl {
     @JavascriptInterface
     public void throwError(Object args) {
         Logger.info("WhiteSDK JS error: " + Utils.fromJson(String.valueOf(args), Map.class));
-        if (commonCallbacks != null) {
-            commonCallbacks.throwError(args);
+        if (commonCallback != null) {
+            commonCallback.throwError(args);
         }
     }
 
@@ -64,10 +60,10 @@ class SdkJsInterfaceImpl {
 
     @JavascriptInterface
     public void postMessage(Object args) {
-        if (commonCallbacks != null) {
+        if (commonCallback != null) {
             try {
                 JSONObject object = new JSONObject((String) args);
-                commonCallbacks.onMessage(object);
+                commonCallback.onMessage(object);
             } catch (Throwable throwable) {
             }
         }
@@ -75,23 +71,23 @@ class SdkJsInterfaceImpl {
 
     @JavascriptInterface
     public void onPPTMediaPlay(Object args) {
-        if (commonCallbacks != null) {
-            commonCallbacks.onPPTMediaPlay();
+        if (commonCallback != null) {
+            commonCallback.onPPTMediaPlay();
         }
     }
 
     @JavascriptInterface
     public void onPPTMediaPause(Object args) {
-        if (commonCallbacks != null) {
-            commonCallbacks.onPPTMediaPause();
+        if (commonCallback != null) {
+            commonCallback.onPPTMediaPause();
         }
     }
 
     @JavascriptInterface
     public void setupFail(Object object) {
-        if (commonCallbacks != null && object instanceof JSONObject) {
+        if (commonCallback != null && object instanceof JSONObject) {
             SDKError sdkError = SDKError.parseError((JSONObject) object);
-            commonCallbacks.sdkSetupFail(sdkError);
+            commonCallback.sdkSetupFail(sdkError);
         }
     }
 }
