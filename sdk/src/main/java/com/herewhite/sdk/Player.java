@@ -238,9 +238,9 @@ public class Player extends Displayer {
     //endregion
 
     // region PlayerListener
-    private PlayerEventListener listener;
+    private PlayerListener listener;
 
-    void setPlayerEventListener(PlayerEventListener playerEventListener) {
+    void setPlayerEventListener(PlayerListener playerEventListener) {
         this.listener = playerEventListener;
     }
     // endregion

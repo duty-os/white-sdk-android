@@ -24,6 +24,7 @@ public class WhiteSdk {
     private final RoomJsInterfaceImpl roomJsInterface;
     private final PlayerJsInterfaceImpl playerJsInterface;
     private final SdkJsInterfaceImpl sdkJsInterface;
+    private RtcJsInterfaceImpl rtcJsInterface;
 
     private final int densityDpi;
 
@@ -60,11 +61,11 @@ public class WhiteSdk {
      * @param whiteSdkConfiguration
      */
     public WhiteSdk(WhiteboardView bridge, Context context, WhiteSdkConfiguration whiteSdkConfiguration) {
-        this(bridge, context, whiteSdkConfiguration, (CommonCallbacks) null);
+        this(bridge, context, whiteSdkConfiguration, (CommonCallback) null);
     }
 
     public WhiteSdk(JsBridgeInterface bridge, Context context, WhiteSdkConfiguration whiteSdkConfiguration) {
-        this(bridge, context, whiteSdkConfiguration, (CommonCallbacks) null);
+        this(bridge, context, whiteSdkConfiguration, (CommonCallback) null);
     }
 
     /**
@@ -73,10 +74,10 @@ public class WhiteSdk {
      * @param bridge                whiteboardView
      * @param context               Android 中的 context
      * @param whiteSdkConfiguration sdk 配置
-     * @param commonCallbacks       commonCallbacks 回调
+     * @param commonCallback       commonCallback 回调
      */
-    public WhiteSdk(JsBridgeInterface bridge, Context context, WhiteSdkConfiguration whiteSdkConfiguration, @Nullable CommonCallbacks commonCallbacks) {
-        this(bridge, context, whiteSdkConfiguration, commonCallbacks, null);
+    public WhiteSdk(JsBridgeInterface bridge, Context context, WhiteSdkConfiguration whiteSdkConfiguration, @Nullable CommonCallback commonCallback) {
+        this(bridge, context, whiteSdkConfiguration, commonCallback, null);
     }
 
     /**
@@ -99,20 +100,22 @@ public class WhiteSdk {
      * @param bridge
      * @param context
      * @param whiteSdkConfiguration
-     * @param commonCallbacks
+     * @param commonCallback
      * @param audioMixerBridge      rtc 桥接类，如果不为 null，动态 ppt 会将所有音频输出交给 RTC 进行处理
      */
-    public WhiteSdk(JsBridgeInterface bridge, Context context, WhiteSdkConfiguration whiteSdkConfiguration, @Nullable CommonCallbacks commonCallbacks, @Nullable AudioMixerBridge audioMixerBridge) {
+    public WhiteSdk(JsBridgeInterface bridge, Context context, WhiteSdkConfiguration whiteSdkConfiguration, @Nullable CommonCallback commonCallback, @Nullable AudioMixerBridge audioMixerBridge) {
         this.bridge = bridge;
         densityDpi = Utils.getDensityDpi(context);
         roomJsInterface = new RoomJsInterfaceImpl();
         playerJsInterface = new PlayerJsInterfaceImpl();
-        sdkJsInterface = new SdkJsInterfaceImpl(commonCallbacks);
+        sdkJsInterface = new SdkJsInterfaceImpl(commonCallback);
         onlyCallbackRemoteStateModify = whiteSdkConfiguration.isOnlyCallbackRemoteStateModify();
 
         if (audioMixerBridge != null) {
-            this.audioMixerImplement = new AudioMixerImplement(bridge, audioMixerBridge);
-            bridge.addJavascriptObject(this.audioMixerImplement, "rtc");
+            audioMixerImplement = new AudioMixerImplement(bridge);
+
+            rtcJsInterface = new RtcJsInterfaceImpl(audioMixerBridge);
+            bridge.addJavascriptObject(rtcJsInterface, "rtc");
             whiteSdkConfiguration.setEnableRtcIntercept(true);
         }
 
@@ -130,7 +133,7 @@ public class WhiteSdk {
 
 
     /**
-     * 加入房间，参考 {@link #joinRoom(RoomParams, RoomCallbacks, Promise)}
+     * 加入房间，参考 {@link #joinRoom(RoomParams, RoomListener, Promise)}
      *
      * @param roomParams  the room params
      * @param roomPromise the room promise
@@ -143,12 +146,12 @@ public class WhiteSdk {
      * 加入房间，最终调用 API
      *
      * @param roomParams    房间参数，room uuid 与 room token
-     * @param roomCallbacks 房间变化回调，在重连时，如果不传 roomCallback 参数，则会回调旧的 roomCallback。如果释放 callback，可以使用 {@link #releaseRoom(String)}
+     * @param roomListener 房间变化回调，在重连时，如果不传 roomCallback 参数，则会回调旧的 roomCallback。如果释放 callback，可以使用 {@link #releaseRoom(String)}
      * @param roomPromise   创建完成回调
      */
-    public void joinRoom(final RoomParams roomParams, final RoomCallbacks roomCallbacks, final Promise<Room> roomPromise) {
+    public void joinRoom(final RoomParams roomParams, final RoomListener roomListener, final Promise<Room> roomPromise) {
         Room room = new Room(roomParams.getUuid(), bridge, densityDpi, onlyCallbackRemoteStateModify);
-        room.setRoomCallbacks(roomCallbacks);
+        room.setRoomListener(roomListener);
         roomJsInterface.setRoom(room.getRoomDelegate());
 
         try {
@@ -178,7 +181,7 @@ public class WhiteSdk {
     }
 
     /**
-     * 创建回放房间，参考 {@link #createPlayer(PlayerConfiguration, PlayerEventListener, Promise)}
+     * 创建回放房间，参考 {@link #createPlayer(PlayerConfiguration, PlayerListener, Promise)}
      *
      * @param playerConfiguration the player configuration
      * @param playerPromise       the player promise
@@ -194,7 +197,7 @@ public class WhiteSdk {
      * @param listener            回放房间变化回调。当使用同一个 sdk 初始化多个房间时，该参数传入 null，则新回放房间，仍然会回调旧的 playerEventListener
      * @param playerPromise       创建完成回调
      */
-    public void createPlayer(final PlayerConfiguration playerConfiguration, final PlayerEventListener listener, final Promise<Player> playerPromise) {
+    public void createPlayer(final PlayerConfiguration playerConfiguration, final PlayerListener listener, final Promise<Player> playerPromise) {
         Player player = new Player(playerConfiguration.getRoom(), bridge, densityDpi);
         player.setPlayerEventListener(listener);
         playerJsInterface.setPlayer(player.getDelegate());

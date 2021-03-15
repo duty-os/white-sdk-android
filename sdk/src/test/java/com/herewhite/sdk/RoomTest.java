@@ -25,7 +25,7 @@ public class RoomTest extends TestCase {
         mockJsBridgeInterface = mock(JsBridgeInterface.class);
         mockRoomCallbacks = mock(RoomCallbacks.class);
         mRoom = new Room(UUID, mockJsBridgeInterface, densityDpi, false);
-        mRoom.setRoomCallbacks(mockRoomCallbacks);
+        mRoom.setRoomListener(mockRoomCallbacks);
     }
 
     public void tearDown() throws Exception {

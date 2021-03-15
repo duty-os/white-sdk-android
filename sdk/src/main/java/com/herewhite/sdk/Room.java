@@ -80,8 +80,8 @@ public class Room extends Displayer {
 
     void setRoomPhase(RoomPhase roomPhase) {
         this.roomPhase = roomPhase;
-        if (roomCallbacks != null) {
-            roomCallbacks.onPhaseChanged(roomPhase);
+        if (roomListener != null) {
+            roomListener.onPhaseChanged(roomPhase);
         }
     }
 
@@ -212,7 +212,7 @@ public class Room extends Displayer {
 
     /**
      * 主动断连，断开后，当前 room 实例将无法使用。
-     * 再次使用，需要使用 {@link WhiteSdk#joinRoom(RoomParams, RoomCallbacks, Promise)} 重新创建实例
+     * 再次使用，需要使用 {@link WhiteSdk#joinRoom(RoomParams, RoomListener, Promise)} 重新创建实例
      * 如需退出后回调，请使用 {@link #disconnect(Promise)}
      */
     public void disconnect() {
@@ -221,7 +221,7 @@ public class Room extends Displayer {
 
     /**
      * 主动断连，断开后，该 room 实例将无法使用。
-     * 再次使用，需要使用 {@link WhiteSdk#joinRoom(RoomParams, RoomCallbacks, Promise)} 重新创建实例
+     * 再次使用，需要使用 {@link WhiteSdk#joinRoom(RoomParams, RoomListener, Promise)} 重新创建实例
      *
      * @param promise 退出后回调
      */
@@ -949,18 +949,18 @@ public class Room extends Displayer {
     }
     //endregion
 
-    // region roomCallbacks
+    // region roomListener
     // 关于此处的回调在JsBridge线程，请考虑/讨论确定是否在主执行
-    private RoomCallbacks roomCallbacks;
+    private RoomListener roomListener;
 
-    void setRoomCallbacks(RoomCallbacks roomCallbacks) {
-        this.roomCallbacks = roomCallbacks;
+    void setRoomListener(RoomListener roomCallbacks) {
+        this.roomListener = roomCallbacks;
     }
 
     private SyncDisplayerState.Listener<RoomState> localRoomStateListener = modifyState -> {
         post(() -> {
-            if (roomCallbacks != null) {
-                roomCallbacks.onRoomStateChanged(modifyState);
+            if (roomListener != null) {
+                roomListener.onRoomStateChanged(modifyState);
             }
         });
     };
@@ -1000,32 +1000,32 @@ public class Room extends Displayer {
         }
 
         public void fireCanUndoStepsUpdate(long canUndoSteps) {
-            if (roomCallbacks != null) {
-                roomCallbacks.onCanUndoStepsUpdate(canUndoSteps);
+            if (roomListener != null) {
+                roomListener.onCanUndoStepsUpdate(canUndoSteps);
             }
         }
 
         public void onCanRedoStepsUpdate(long canRedoSteps) {
-            if (roomCallbacks != null) {
-                roomCallbacks.onCanRedoStepsUpdate(canRedoSteps);
+            if (roomListener != null) {
+                roomListener.onCanRedoStepsUpdate(canRedoSteps);
             }
         }
 
         public void fireKickedWithReason(String reason) {
-            if (roomCallbacks != null) {
-                roomCallbacks.onKickedWithReason(reason);
+            if (roomListener != null) {
+                roomListener.onKickedWithReason(reason);
             }
         }
 
         public void fireDisconnectWithError(Exception exception) {
-            if (roomCallbacks != null) {
-                roomCallbacks.onDisconnectWithError(exception);
+            if (roomListener != null) {
+                roomListener.onDisconnectWithError(exception);
             }
         }
 
         public void fireCatchErrorWhenAppendFrame(long userId, Exception exception) {
-            if (roomCallbacks != null) {
-                roomCallbacks.onCatchErrorWhenAppendFrame(userId, exception);
+            if (roomListener != null) {
+                roomListener.onCatchErrorWhenAppendFrame(userId, exception);
             }
         }
 
