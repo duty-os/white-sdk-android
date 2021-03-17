@@ -35,6 +35,5 @@
         <activity
             android:name=".RoomActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize" />
-        <activity android:name=".TestActivity" />
     </application>
 </manifest>

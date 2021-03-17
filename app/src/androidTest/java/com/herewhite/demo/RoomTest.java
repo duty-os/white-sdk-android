@@ -11,17 +11,18 @@ import com.herewhite.sdk.domain.Promise;
 import com.herewhite.sdk.domain.RoomPhase;
 import com.herewhite.sdk.domain.RoomState;
 import com.herewhite.sdk.domain.SDKError;
+import com.herewhite.sdk.domain.Scene;
 import com.herewhite.sdk.domain.SceneState;
 import com.herewhite.sdk.domain.ViewMode;
 import com.herewhite.sdk.domain.WhiteDisplayerState;
 
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.concurrent.CountDownLatch;
 
-import androidx.test.espresso.Espresso;
 import androidx.test.espresso.IdlingRegistry;
 import androidx.test.espresso.IdlingResource;
 import androidx.test.espresso.UiController;
@@ -286,7 +287,9 @@ public class RoomTest {
     }
 
     class SetScenePathResult implements Promise<Boolean> {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountingIdlingResource idlingResource = new CountingIdlingResource("SetScenePathResult");
+        volatile String errorMessage;
+        boolean success;
 
         SetScenePathResult() {
 
@@ -294,16 +297,27 @@ public class RoomTest {
 
         @Override
         public void then(Boolean success) {
-            countDownLatch.countDown();
+            this.success = success;
+            idlingResource.decrement();
         }
 
         @Override
         public void catchEx(SDKError t) {
-            countDownLatch.countDown();
+            errorMessage = t.getMessage();
+            idlingResource.decrement();
         }
 
-        public void await() throws InterruptedException {
-            countDownLatch.await();
+        public void register() {
+            IdlingRegistry.getInstance().register(idlingResource);
+        }
+
+        public void unregister() {
+            IdlingRegistry.getInstance().unregister(idlingResource);
+        }
+
+
+        public void start() {
+            idlingResource.increment();
         }
     }
 
@@ -329,6 +343,8 @@ public class RoomTest {
         });
         IdlingRegistry.getInstance().register(idlingResource);
 
+        SetScenePathResult result = new SetScenePathResult();
+        result.register();
         onView(isRoot()).perform(new SimpleViewAction() {
             @Override
             public void perform(UiController uiController, View view) {
@@ -337,36 +353,130 @@ public class RoomTest {
                     fail();
                 }
 
-                SetScenePathResult result = new SetScenePathResult();
-                mActivity.mRoom.setScenePath("/invalid/path", result);
-                try {
-                    result.await();
-                } catch (InterruptedException e) {
-                }
+                result.start();
+                mActivity.mRoom.setScenePath(getNextScenePath(currentSceneState), result);
+                uiController.loopMainThreadUntilIdle();
+            }
+
+            private String getNextScenePath(SceneState currentSceneState) {
+                String dir = currentSceneState.getScenePath().substring(0, currentSceneState.getScenePath().lastIndexOf('/'));
+
+                int index = currentSceneState.getIndex();
+                Scene[] scenes = currentSceneState.getScenes();
+                Scene tScene = scenes[(index + 1) % scenes.length];
+
+                return dir + '/' + tScene.getName();
             }
         });
 
-
+        onView(isRoot()).perform(new SimpleViewAction() {
+            @Override
+            public void perform(UiController uiController, View view) {
+                assertEquals(true, result.success);
+                result.unregister();
+            }
+        });
     }
 
     @Test
-    public void testSetScenePath() {
+    public void setScenePath_not_a_scene() {
+        onIdle();
+
+        SetScenePathResult result = new SetScenePathResult();
+        result.register();
+
+        onView(isRoot()).perform(new SimpleViewAction() {
+            @Override
+            public void perform(UiController uiController, View view) {
+                result.start();
+                mActivity.mRoom.setScenePath("/invalid/dir/", result);
+            }
+        });
+
+        onView(isRoot()).perform(new SimpleViewAction() {
+            @Override
+            public void perform(UiController uiController, View view) {
+                assertEquals("/invalid/dir is not a scene", result.errorMessage);
+                result.unregister();
+            }
+        });
     }
 
     @Test
+    public void setScenePath_should_start_with_slash() {
+        onIdle();
+
+        SetScenePathResult result = new SetScenePathResult();
+        result.register();
+
+        onView(isRoot()).perform(new SimpleViewAction() {
+            @Override
+            public void perform(UiController uiController, View view) {
+                result.start();
+                mActivity.mRoom.setScenePath("invalid/path", result);
+            }
+        });
+
+        onView(isRoot()).perform(new SimpleViewAction() {
+            @Override
+            public void perform(UiController uiController, View view) {
+                assertEquals("path \"invalid/path\" should start with \"/\"", result.errorMessage);
+                result.unregister();
+            }
+        });
+    }
+
+    String errorMessage;
+
+    @Test
+    public void setScenePath_should_start_with_slash_CDL() {
+        onIdle();
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        onView(isRoot()).perform(new SimpleViewAction() {
+            @Override
+            public void perform(UiController uiController, View view) {
+                errorMessage = null;
+                mActivity.mRoom.setScenePath("invalid/path", new Promise<Boolean>() {
+                    @Override
+                    public void then(Boolean aBoolean) {
+                        countDownLatch.countDown();
+                    }
+
+                    @Override
+                    public void catchEx(SDKError t) {
+                        errorMessage = t.getMessage();
+                        countDownLatch.countDown();
+                    }
+                });
+            }
+        });
+
+        try {
+            countDownLatch.await();
+            assertEquals("path \"invalid/path\" should start with \"/\"", errorMessage);
+        } catch (InterruptedException e) {
+            fail();
+        }
+    }
+
+
+    @Test
+    @Ignore
     public void setSceneIndex() {
     }
 
     @Test
+    @Ignore
     public void putScenes() {
     }
 
     @Test
+    @Ignore
     public void moveScene() {
-
     }
 
     @Test
+    @Ignore
     public void removeScenes() {
 
     }
@@ -390,11 +500,6 @@ public class RoomTest {
     }
 
     @Test
-    public void debugInfo() {
-
-    }
-
-    @Test
     public void disableOperations() {
 
     }
@@ -402,14 +507,6 @@ public class RoomTest {
     @Test
     public void disableEraseImage() {
 
-    }
-
-    @Test
-    public void disableCameraTransform() {
-    }
-
-    @Test
-    public void disableDeviceInputs() {
     }
 
     @After
