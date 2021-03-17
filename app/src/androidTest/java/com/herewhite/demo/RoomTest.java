@@ -21,6 +21,7 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 
 import androidx.test.espresso.IdlingRegistry;
@@ -355,7 +356,6 @@ public class RoomTest {
 
                 result.start();
                 mActivity.mRoom.setScenePath(getNextScenePath(currentSceneState), result);
-                uiController.loopMainThreadUntilIdle();
             }
 
             private String getNextScenePath(SceneState currentSceneState) {
@@ -368,6 +368,8 @@ public class RoomTest {
                 return dir + '/' + tScene.getName();
             }
         });
+
+        onIdle(); // wait for idling
 
         onView(isRoot()).perform(new SimpleViewAction() {
             @Override
@@ -431,6 +433,7 @@ public class RoomTest {
     @Test
     public void setScenePath_should_start_with_slash_CDL() {
         onIdle();
+
         CountDownLatch countDownLatch = new CountDownLatch(1);
         onView(isRoot()).perform(new SimpleViewAction() {
             @Override
@@ -459,20 +462,61 @@ public class RoomTest {
         }
     }
 
-
-    @Test
-    @Ignore
-    public void setSceneIndex() {
-    }
+    private final String PUT_TEST_DIR = "/test";
+    private final String PUT_TEST_PAGE = "page";
+    private final String PUT_TEST_PATH = PUT_TEST_DIR + "/" + PUT_TEST_PAGE;
 
     @Test
     @Ignore
     public void putScenes() {
+        onIdle();
+
+        CountDownLatch latch = new CountDownLatch(2);
+        onIdle((Callable<Void>) () -> {
+            mActivity.mRoom.putScenes(PUT_TEST_DIR, new Scene[]{new Scene(PUT_TEST_PAGE)}, 0);
+            mActivity.mRoom.setScenePath(PUT_TEST_PATH, new Promise<Boolean>() {
+                @Override
+                public void then(Boolean success) {
+                    latch.countDown();
+                }
+
+                @Override
+                public void catchEx(SDKError t) {
+                    latch.countDown();
+                }
+            });
+
+            mActivity.mRoom.getSceneState(new Promise<SceneState>() {
+                @Override
+                public void then(SceneState sceneState) {
+                    latch.countDown();
+                }
+
+                @Override
+                public void catchEx(SDKError t) {
+                    latch.countDown();
+                }
+            });
+            return null;
+        });
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            fail();
+        }
+
+        onIdle((Callable<Void>) () -> {
+            assertEquals(PUT_TEST_PATH, mActivity.mRoom.getSceneState().getScenePath());
+            mActivity.mRoom.removeScenes(PUT_TEST_DIR);
+            return null;
+        });
     }
 
     @Test
     @Ignore
     public void moveScene() {
+
     }
 
     @Test
