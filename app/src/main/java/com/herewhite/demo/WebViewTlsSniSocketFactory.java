@@ -16,12 +16,13 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-public class WebviewTlsSniSocketFactory extends SSLSocketFactory {
-    private final String TAG = WebviewTlsSniSocketFactory.class.getSimpleName();
-    HostnameVerifier hostnameVerifier = HttpsURLConnection.getDefaultHostnameVerifier();
-    private HttpsURLConnection conn;
+public class WebViewTlsSniSocketFactory extends SSLSocketFactory {
+    private final String TAG = WebViewTlsSniSocketFactory.class.getSimpleName();
 
-    public WebviewTlsSniSocketFactory(HttpsURLConnection conn) {
+    HostnameVerifier hostnameVerifier = HttpsURLConnection.getDefaultHostnameVerifier();
+    HttpsURLConnection conn;
+
+    public WebViewTlsSniSocketFactory(HttpsURLConnection conn) {
         this.conn = conn;
     }
 

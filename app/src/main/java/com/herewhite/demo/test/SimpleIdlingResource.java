@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.herewhite.demo.IdlingResource;
+package com.herewhite.demo.test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
