@@ -1,6 +1,6 @@
 package com.herewhite.demo;
 
-import com.herewhite.demo.IdlingResource.SimpleIdlingResource;
+import com.herewhite.demo.test.SimpleIdlingResource;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

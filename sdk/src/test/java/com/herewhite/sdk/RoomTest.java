@@ -1,8 +1,11 @@
 package com.herewhite.sdk;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.herewhite.sdk.domain.Promise;
 import com.herewhite.sdk.domain.RoomPhase;
 import com.herewhite.sdk.domain.ViewMode;
+import com.herewhite.sdk.util.GsonFieldIgnoreStrategy;
 
 import junit.framework.TestCase;
 
@@ -29,6 +32,19 @@ public class RoomTest extends TestCase {
     }
 
     public void tearDown() throws Exception {
+    }
+
+    private static final String ROOM_INITIAL_STATES = "{\"roomPhase\":\"connecting\",\"disconnectedBySelf\":false,\"writable\":null,\"timeDelay\":0,\"observerId\":null,\"localRoomStateListener\":{},\"roomDelegate\":null,\"backgroundColor\":-1,\"uuid\":\"7e7c8f007a4011eba97639a3a8d1dde1\",\"densityDpi\":3,\"eventListenerMap\":{},\"frequencyEventListenerMap\":{}}";
+
+    public void testInitialStatesBySerialization() {
+        Gson gson = new GsonBuilder()
+                .serializeNulls()
+                .addSerializationExclusionStrategy(
+                        new GsonFieldIgnoreStrategy("syncRoomState", "roomListener", "bridge", "handler")
+                )
+                .create();
+
+        assertEquals(ROOM_INITIAL_STATES, gson.toJson(mRoom));
     }
 
     public void testSetAndGet_DisconnectedBySelf() {
@@ -95,7 +111,6 @@ public class RoomTest extends TestCase {
     public void testUndo() {
         mRoom.undo();
         verify(mockJsBridgeInterface).callHandler("room.undo", new Object[]{});
-
     }
 
     public void testSetViewMode() {

@@ -25,8 +25,8 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
 
 public class WhiteWebViewClient extends WebViewClient {
-
     private static final String TAG = "WebClient";
+
     private HttpDnsService httpDns;
 
     public WhiteWebViewClient(HttpDnsService httpDns) {
@@ -130,7 +130,7 @@ public class WhiteWebViewClient extends WebViewClient {
             conn.setInstanceFollowRedirects(false);
             if (conn instanceof HttpsURLConnection) {
                 final HttpsURLConnection httpsURLConnection = (HttpsURLConnection) conn;
-                WebviewTlsSniSocketFactory sslSocketFactory = new WebviewTlsSniSocketFactory((HttpsURLConnection) conn);
+                WebViewTlsSniSocketFactory sslSocketFactory = new WebViewTlsSniSocketFactory((HttpsURLConnection) conn);
 
                 // sni场景，创建SSLScocket
                 httpsURLConnection.setSSLSocketFactory(sslSocketFactory);
