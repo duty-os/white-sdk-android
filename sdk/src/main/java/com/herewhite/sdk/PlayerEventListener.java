@@ -3,7 +3,8 @@ package com.herewhite.sdk;
 
 /**
  * 回放房间事件回调接口
- * 新接入使用  {@link  PlayerListener}
+ *
+ * @deprecated Use the standard {@link PlayerListener} instead
  */
 @Deprecated
 public interface PlayerEventListener extends PlayerListener {

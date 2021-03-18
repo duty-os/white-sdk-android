@@ -4,6 +4,9 @@ import com.herewhite.sdk.domain.ConversionInfo;
 import com.herewhite.sdk.domain.ConvertException;
 import com.herewhite.sdk.domain.ConvertedFiles;
 
+/**
+ * @deprecated 空实现类由用户应用处理
+ */
 @Deprecated
 public class AbstractConverterCallbacks implements ConverterCallbacks {
     @Override

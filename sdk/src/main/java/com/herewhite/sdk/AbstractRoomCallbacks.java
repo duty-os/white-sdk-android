@@ -6,6 +6,8 @@ import com.herewhite.sdk.domain.RoomState;
 
 /**
  * Created by buhe on 2018/8/12.
+ *
+ * @deprecated 空实现类由用户应用处理
  */
 @Deprecated
 public abstract class AbstractRoomCallbacks implements RoomCallbacks {
