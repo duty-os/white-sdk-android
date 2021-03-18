@@ -4,7 +4,9 @@ import android.view.View;
 
 import com.herewhite.demo.utils.SimpleViewAction;
 import com.herewhite.sdk.AbstractRoomCallbacks;
+import com.herewhite.sdk.domain.AnimationMode;
 import com.herewhite.sdk.domain.Appliance;
+import com.herewhite.sdk.domain.CameraConfig;
 import com.herewhite.sdk.domain.GlobalState;
 import com.herewhite.sdk.domain.MemberState;
 import com.herewhite.sdk.domain.Promise;
@@ -17,7 +19,6 @@ import com.herewhite.sdk.domain.ViewMode;
 import com.herewhite.sdk.domain.WhiteDisplayerState;
 
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -150,6 +151,8 @@ public class RoomTest {
 
     class FakeRoomCallbacks extends AbstractRoomCallbacks {
         static final String MODIFY_STATE = "modifyState";
+        // 无法依赖modifyState确定zoomChange成功，not used
+        static final String MODIFY_STATE_ZOOM = "modifyStateZoom";
         static final String ROOM_PHASE_CONNECTED = "roomPhaseConnected";
         static final String ROOM_PHASE_DISCONNECTED = "roomPhaseDisconnected";
 
@@ -176,6 +179,9 @@ public class RoomTest {
         @Override
         public void onRoomStateChanged(RoomState modifyState) {
             this.modifyState = modifyState;
+            if (modifyState.getZoomScale() != null) {
+                checkAndMark(MODIFY_STATE_ZOOM);
+            }
             if (modifyState.getBroadcastState() != null) {
                 checkAndMark(MODIFY_STATE);
             }
@@ -466,37 +472,59 @@ public class RoomTest {
     private final String PUT_TEST_PAGE = "page";
     private final String PUT_TEST_PATH = PUT_TEST_DIR + "/" + PUT_TEST_PAGE;
 
+    private final String PUT_TEST_PAGE_TARGET = "pagetarget";
+    private final String PUT_TEST_PATH_TARGET = PUT_TEST_DIR + "/" + PUT_TEST_PAGE_TARGET;
+
+    class SimpleLatchDownPromise<T> implements Promise<T> {
+        private final CountDownLatch latch;
+
+        public SimpleLatchDownPromise(CountDownLatch latch) {
+            this.latch = latch;
+        }
+
+        @Override
+        public void then(T t) {
+            latch.countDown();
+        }
+
+        @Override
+        public void catchEx(SDKError t) {
+            latch.countDown();
+        }
+    }
+
+    class SceneStateRecover {
+        private final SceneState sceneState;
+
+        public SceneStateRecover(SceneState sceneState) {
+            this.sceneState = sceneState;
+        }
+
+        public void restore() {
+            SetScenePathResult result = new SetScenePathResult();
+            result.register();
+            onIdle((Callable<Void>) () -> {
+                result.start();
+                mActivity.mRoom.setScenePath(sceneState.getScenePath(), result);
+                return null;
+            });
+            onIdle((Callable<Void>) () -> {
+                result.unregister();
+                return null;
+            });
+        }
+    }
+
     @Test
-    @Ignore
     public void putScenes() {
         onIdle();
+        SceneStateRecover recover = new SceneStateRecover(mActivity.mRoom.getSceneState());
 
         CountDownLatch latch = new CountDownLatch(2);
         onIdle((Callable<Void>) () -> {
             mActivity.mRoom.putScenes(PUT_TEST_DIR, new Scene[]{new Scene(PUT_TEST_PAGE)}, 0);
-            mActivity.mRoom.setScenePath(PUT_TEST_PATH, new Promise<Boolean>() {
-                @Override
-                public void then(Boolean success) {
-                    latch.countDown();
-                }
-
-                @Override
-                public void catchEx(SDKError t) {
-                    latch.countDown();
-                }
-            });
-
-            mActivity.mRoom.getSceneState(new Promise<SceneState>() {
-                @Override
-                public void then(SceneState sceneState) {
-                    latch.countDown();
-                }
-
-                @Override
-                public void catchEx(SDKError t) {
-                    latch.countDown();
-                }
-            });
+            mActivity.mRoom.setScenePath(PUT_TEST_PATH, new SimpleLatchDownPromise<>(latch));
+            mActivity.mRoom.getSceneState(new SimpleLatchDownPromise<>(latch));
             return null;
         });
 
@@ -511,46 +539,70 @@ public class RoomTest {
             mActivity.mRoom.removeScenes(PUT_TEST_DIR);
             return null;
         });
+
+        recover.restore();
     }
 
     @Test
-    @Ignore
     public void moveScene() {
+        onIdle();
+        SceneStateRecover recover = new SceneStateRecover(mActivity.mRoom.getSceneState());
 
-    }
+        CountDownLatch latch = new CountDownLatch(2);
+        onIdle((Callable<Void>) () -> {
+            mActivity.mRoom.putScenes(PUT_TEST_DIR, new Scene[]{new Scene(PUT_TEST_PAGE)}, 0);
+            mActivity.mRoom.setScenePath(PUT_TEST_PATH, new SimpleLatchDownPromise<>(latch));
+            mActivity.mRoom.moveScene(PUT_TEST_PATH, PUT_TEST_PATH_TARGET);
+            mActivity.mRoom.getSceneState(new SimpleLatchDownPromise<>(latch));
+            return null;
+        });
 
-    @Test
-    @Ignore
-    public void removeScenes() {
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            fail();
+        }
 
-    }
+        onIdle((Callable<Void>) () -> {
+            assertEquals(PUT_TEST_PATH_TARGET, mActivity.mRoom.getSceneState().getScenePath());
+            mActivity.mRoom.removeScenes(PUT_TEST_DIR);
+            return null;
+        });
 
-    @Test
-    public void cleanScene() {
-
-    }
-
-    @Test
-    public void pptNextStep() {
-    }
-
-    @Test
-    public void pptPreviousStep() {
+        recover.restore();
     }
 
     @Test
     public void zoomChange() {
+        CountDownLatch latch = new CountDownLatch(1);
+        onView(isRoot()).perform(new SimpleViewAction() {
+            @Override
+            public void perform(UiController uiController, View view) {
+                CameraConfig config = new CameraConfig();
+                config.setScale(2.0);
+                config.setAnimationMode(AnimationMode.Immediately);
+                mActivity.mRoom.moveCamera(config);
 
-    }
+                mActivity.mRoom.getZoomScale(new Promise<Number>() {
+                    @Override
+                    public void then(Number number) {
+                        latch.countDown();
+                    }
 
-    @Test
-    public void disableOperations() {
+                    @Override
+                    public void catchEx(SDKError t) {
+                        latch.countDown();
+                    }
+                });
+            }
+        });
 
-    }
-
-    @Test
-    public void disableEraseImage() {
-
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            fail();
+        }
+        assertEquals(2.0, mActivity.mRoom.getZoomScale(), Constants.DOUBLE_DELTA);
     }
 
     @After
