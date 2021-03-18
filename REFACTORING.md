@@ -13,3 +13,5 @@
 * model类的序列化保证
 * Room实体类接口调用mock测试
 * SetAndGet及基本逻辑集成测试
+
+* 所有serialization测试为后续小重构提供保证，如无特别需求，调整完之后需要删除

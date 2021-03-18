@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import androidx.annotation.ColorInt;
+import androidx.annotation.VisibleForTesting;
 import wendu.dsbridge.OnReturnValue;
 
 /**
@@ -46,8 +47,10 @@ public class Displayer {
     protected int densityDpi;
     private Handler handler;
 
-    protected ConcurrentHashMap<String, EventListener> eventListenerMap = new ConcurrentHashMap<>();
-    protected ConcurrentHashMap<String, FrequencyEventListener> frequencyEventListenerMap = new ConcurrentHashMap<>();
+    @VisibleForTesting
+    ConcurrentHashMap<String, EventListener> eventListenerMap = new ConcurrentHashMap<>();
+    @VisibleForTesting
+    ConcurrentHashMap<String, FrequencyEventListener> frequencyEventListenerMap = new ConcurrentHashMap<>();
 
     public Displayer(String uuid, JsBridgeInterface bridge, int densityDpi) {
         this.uuid = uuid;

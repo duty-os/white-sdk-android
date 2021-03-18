@@ -139,6 +139,13 @@ class SyncDisplayerState<T> {
         }
     }
 
+    /**
+     * Note:此方法假定json1，json2来至同一个序列化对象，否则JsonArray比较有缺陷
+     *
+     * @param json1
+     * @param json2
+     * @return
+     */
     private static boolean compareJson(JsonElement json1, JsonElement json2) {
         boolean isEqual = true;
 
