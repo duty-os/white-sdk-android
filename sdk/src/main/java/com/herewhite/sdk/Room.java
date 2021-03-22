@@ -3,6 +3,7 @@ package com.herewhite.sdk;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.herewhite.sdk.domain.AkkoEvent;
+import com.herewhite.sdk.domain.Appliance;
 import com.herewhite.sdk.domain.BroadcastState;
 import com.herewhite.sdk.domain.CameraConfig;
 import com.herewhite.sdk.domain.EventEntry;
@@ -119,6 +120,9 @@ public class Room extends Displayer {
      */
     public void setMemberState(MemberState memberState) {
         syncRoomState.putProperty("memberState", memberState);
+        if (Appliance.TEXT.equals(memberState.getCurrentApplianceName())) {
+            bridge.callFocusView();
+        }
         bridge.callHandler("room.setMemberState", new Object[]{memberState});
     }
 

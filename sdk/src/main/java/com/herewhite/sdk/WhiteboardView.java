@@ -82,6 +82,11 @@ public class WhiteboardView extends DWebView implements JsBridgeInterface {
         this.callHandler(method, null, handler);
     }
 
+    @Override
+    public void callFocusView() {
+        requestFocus();
+    }
+
     class FixWebChromeClient extends WebChromeClient {
         @Override
         public Bitmap getDefaultVideoPoster() {
