@@ -8,7 +8,6 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -340,15 +339,17 @@ public class RoomActivity extends BaseActivity {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        logRoomInfo("width:" + mWhiteboardView.getWidth() / getResources().getDisplayMetrics().density + " height: " + mWhiteboardView.getHeight() / getResources().getDisplayMetrics().density);
+        // Note：sdk内部已经实现size变更。
+        // 特别情况下出现页面异常状况，调用WhiteboardView.setAutoResize(false)禁用内部处理; 外部调用在合适时机调用Room.refreshViewSize()
+        // logRoomInfo("width:" + mWhiteboardView.getWidth() / getResources().getDisplayMetrics().density + " height: " + mWhiteboardView.getHeight() / getResources().getDisplayMetrics().density);
         // onConfigurationChanged 调用时，横竖屏切换并没有完成，需要延迟调用
-        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mRoom.refreshViewSize();
-                logRoomInfo("width:" + mWhiteboardView.getWidth() / getResources().getDisplayMetrics().density + " height: " + mWhiteboardView.getHeight() / getResources().getDisplayMetrics().density);
-            }
-        }, 1000);
+        // new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+        //     @Override
+        //     public void run() {
+        //         mRoom.refreshViewSize();
+        //         logRoomInfo("width:" + mWhiteboardView.getWidth() / getResources().getDisplayMetrics().density + " height: " + mWhiteboardView.getHeight() / getResources().getDisplayMetrics().density);
+        //     }
+        // }, 1000);
     }
 
     //endregion
