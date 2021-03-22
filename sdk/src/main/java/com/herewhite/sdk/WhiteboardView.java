@@ -7,9 +7,6 @@ import android.os.Build;
 import android.util.AttributeSet;
 import android.webkit.WebChromeClient;
 
-import com.herewhite.sdk.domain.Appliance;
-import com.herewhite.sdk.domain.MemberState;
-
 import wendu.dsbridge.DWebView;
 import wendu.dsbridge.OnReturnValue;
 
@@ -18,6 +15,8 @@ import wendu.dsbridge.OnReturnValue;
  */
 
 public class WhiteboardView extends DWebView implements JsBridgeInterface {
+
+    private boolean autoResize = true;
 
     /**
      * 初始化白板界面
@@ -38,6 +37,23 @@ public class WhiteboardView extends DWebView implements JsBridgeInterface {
     public WhiteboardView(Context context, AttributeSet attrs) {
         super(getFixedContext(context), attrs);
         init();
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int ow, int oh) {
+        super.onSizeChanged(w, h, ow, oh);
+        if (autoResize) {
+            callHandler("displayer.refreshViewSize", new Object[]{});
+        }
+    }
+
+    /**
+     * 设置视图大小切换时自动发送事件至js端
+     *
+     * @param autoResize
+     */
+    public void setAutoResize(boolean autoResize) {
+        this.autoResize = autoResize;
     }
 
     public static Context getFixedContext(Context context) {
