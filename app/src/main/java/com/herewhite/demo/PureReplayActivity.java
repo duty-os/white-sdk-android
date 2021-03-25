@@ -247,7 +247,7 @@ public class PureReplayActivity extends AppCompatActivity implements PlayerEvent
 
     protected void initPlayer(String uuid, String roomToken) {
         WhiteSdk whiteSdk = new WhiteSdk(whiteboardView, PureReplayActivity.this,
-                new WhiteSdkConfiguration(demoAPI.getAppIdentifier(), true),
+                new WhiteSdkConfiguration(demoAPI.getAppId(), true),
                 new UrlInterrupter() {
                     @Override
                     public String urlInterrupter(String sourceUrl) {

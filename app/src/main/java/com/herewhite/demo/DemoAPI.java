@@ -1,5 +1,6 @@
 package com.herewhite.demo;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -32,16 +33,21 @@ public class DemoAPI {
     private static final String TAG = DemoAPI.class.getSimpleName();
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
-    private static final String sdkToken = "WHITEcGFydG5lcl9pZD1OZ3pwQWNBdlhiemJERW9NY0E0Z0V3RTUwbVZxM0NIbDJYV0Ymc2lnPWNiZWExOTMwNzc1NmQyNmU3N2U3M2Q0NWZjNTZiOGIwMWE2ZjU4NDI6YWRtaW5JZD0yMTYmcm9sZT1hZG1pbiZleHBpcmVfdGltZT0xNTg5ODMzNTQxJmFrPU5nenBBY0F2WGJ6YkRFb01jQTRnRXdFNTBtVnEzQ0hsMlhXRiZjcmVhdGVfdGltZT0xNTU4Mjc2NTg5Jm5vbmNlPTE1NTgyNzY1ODg4NDQwMA";
+    Context contextRef;
     private static final String host = "https://cloudcapiv4.herewhite.com";
 
-    private String appId = "792/uaYcRG0I7ctP9A";
-    private String demoUUID = "7e7c8f007a4011eba97639a3a8d1dde1";
-    private String demoRoomToken = "NETLESSROOM_YWs9M2R5WmdQcFlLcFlTdlQ1ZjRkOFBiNjNnY1RoZ3BDSDlwQXk3Jm5vbmNlPTE2MTQ1NzAyOTg2NzgwMCZyb2xlPTAmc2lnPWIzZjY1NzQ2ZDJhOWU5Y2FjZmI3MzVlMGI5YWRkMjFhY2I1NjkwZTBlMWE2MWZkMjQ0NGE2ZmI2MWJlNDBhODImdXVpZD03ZTdjOGYwMDdhNDAxMWViYTk3NjM5YTNhOGQxZGRlMQ";
+    private final String sdkToken;
+    private final String appId;
+    private final String demoUUID;
+    private final String demoRoomToken;
 
-    @Deprecated
-    public String getAppIdentifier() {
-        return appId;
+    public DemoAPI() {
+        contextRef = MainApplication.sContext;
+        appId = contextRef.getString(R.string.sdk_app_id);
+        sdkToken = contextRef.getString(R.string.sdk_app_token);
+
+        demoUUID = contextRef.getString(R.string.room_uuid);
+        demoRoomToken = contextRef.getString(R.string.room_token);
     }
 
     public String getAppId() {
@@ -208,11 +214,6 @@ public class DemoAPI {
                 } finally {
                     fout.close();
                 }
-            /* if time should be restored as well
-            long time = ze.getTime();
-            if (time > 0)
-                file.setLastModified(time);
-            */
             }
         } finally {
             zis.close();
