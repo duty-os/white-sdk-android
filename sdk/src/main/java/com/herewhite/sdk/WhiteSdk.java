@@ -60,21 +60,17 @@ public class WhiteSdk {
      * @param context
      * @param whiteSdkConfiguration
      */
-    public WhiteSdk(WhiteboardView bridge, Context context, WhiteSdkConfiguration whiteSdkConfiguration) {
-        this(bridge, context, whiteSdkConfiguration, (CommonCallback) null);
-    }
-
     public WhiteSdk(JsBridgeInterface bridge, Context context, WhiteSdkConfiguration whiteSdkConfiguration) {
         this(bridge, context, whiteSdkConfiguration, (CommonCallback) null);
     }
-
+    
     /**
      * 初始化 sdk 方法
      *
      * @param bridge                whiteboardView
      * @param context               Android 中的 context
      * @param whiteSdkConfiguration sdk 配置
-     * @param commonCallback       commonCallback 回调
+     * @param commonCallback        commonCallback 回调
      */
     public WhiteSdk(JsBridgeInterface bridge, Context context, WhiteSdkConfiguration whiteSdkConfiguration, @Nullable CommonCallback commonCallback) {
         this(bridge, context, whiteSdkConfiguration, commonCallback, null);
@@ -145,9 +141,9 @@ public class WhiteSdk {
     /**
      * 加入房间，最终调用 API
      *
-     * @param roomParams    房间参数，room uuid 与 room token
+     * @param roomParams   房间参数，room uuid 与 room token
      * @param roomListener 房间变化回调，在重连时，如果不传 roomCallback 参数，则会回调旧的 roomCallback。如果释放 callback，可以使用 {@link #releaseRoom(String)}
-     * @param roomPromise   创建完成回调
+     * @param roomPromise  创建完成回调
      */
     public void joinRoom(final RoomParams roomParams, final RoomListener roomListener, final Promise<Room> roomPromise) {
         Room room = new Room(roomParams.getUuid(), bridge, densityDpi, onlyCallbackRemoteStateModify);
