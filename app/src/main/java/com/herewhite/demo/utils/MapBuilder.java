@@ -14,7 +14,7 @@ public class MapBuilder<Key, Value> {
         return this;
     }
 
-    public HashMap build() {
+    public HashMap<Key, Value> build() {
         return mMap;
     }
 }

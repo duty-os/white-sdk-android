@@ -7,9 +7,6 @@ import android.os.Build;
 import android.util.AttributeSet;
 import android.webkit.WebChromeClient;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import wendu.dsbridge.DWebView;
 import wendu.dsbridge.OnReturnValue;
 
@@ -19,6 +16,8 @@ import wendu.dsbridge.OnReturnValue;
 
 public class WhiteboardView extends DWebView implements JsBridgeInterface {
 
+    private boolean autoResize = true;
+
     /**
      * 初始化白板界面
      *
@@ -26,7 +25,7 @@ public class WhiteboardView extends DWebView implements JsBridgeInterface {
      */
     public WhiteboardView(Context context) {
         super(getFixedContext(context));
-        init(context, null);
+        init();
     }
 
     /**
@@ -37,7 +36,24 @@ public class WhiteboardView extends DWebView implements JsBridgeInterface {
      */
     public WhiteboardView(Context context, AttributeSet attrs) {
         super(getFixedContext(context), attrs);
-        init(context, attrs);
+        init();
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int ow, int oh) {
+        super.onSizeChanged(w, h, ow, oh);
+        if (autoResize) {
+            callHandler("displayer.refreshViewSize", new Object[]{});
+        }
+    }
+
+    /**
+     * 设置视图大小切换时自动发送事件至js端
+     *
+     * @param autoResize
+     */
+    public void setAutoResize(boolean autoResize) {
+        this.autoResize = autoResize;
     }
 
     public static Context getFixedContext(Context context) {
@@ -48,21 +64,10 @@ public class WhiteboardView extends DWebView implements JsBridgeInterface {
         }
     }
 
-    private void init(Context context, AttributeSet attrs) {
+    private void init() {
         getSettings().setMediaPlaybackRequiresUserGesture(false);
         loadUrl("file:///android_asset/whiteboard/index.html");
         setWebChromeClient(new FixWebChromeClient());
-    }
-
-    private int getWebViewVersion() {
-        String userAgent = getSettings().getUserAgentString();
-        Pattern pattern = Pattern.compile("Chrome/([\\d]+)", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(userAgent);
-        if (matcher.find()) {
-            String group = matcher.group(1);
-            return Integer.valueOf(group);
-        }
-        return 0;
     }
 
     public <T> void callHandler(String method, Object[] args, OnReturnValue<T> handler) {
@@ -75,6 +80,11 @@ public class WhiteboardView extends DWebView implements JsBridgeInterface {
 
     public <T> void callHandler(String method, OnReturnValue<T> handler) {
         this.callHandler(method, null, handler);
+    }
+
+    @Override
+    public void callFocusView() {
+        requestFocus();
     }
 
     class FixWebChromeClient extends WebChromeClient {

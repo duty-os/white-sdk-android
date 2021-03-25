@@ -10,4 +10,10 @@ public interface JsBridgeInterface {
     <T> void callHandler(String method, OnReturnValue<T> handler);
 
     void callHandler(String method, Object[] args);
+
+    /**
+     * 触发获取焦点
+     */
+    default void callFocusView() {
+    }
 }

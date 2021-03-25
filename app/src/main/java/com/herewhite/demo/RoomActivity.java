@@ -1,3 +1,4 @@
+
 package com.herewhite.demo;
 
 import android.annotation.SuppressLint;
@@ -7,7 +8,6 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,11 +17,12 @@ import com.alibaba.sdk.android.httpdns.HttpDns;
 import com.alibaba.sdk.android.httpdns.HttpDnsService;
 import com.google.gson.Gson;
 import com.herewhite.demo.utils.MapBuilder;
-import com.herewhite.sdk.AbstractCommonCallbacks;
 import com.herewhite.sdk.AbstractRoomCallbacks;
+import com.herewhite.sdk.CommonCallbacks;
 import com.herewhite.sdk.Converter;
 import com.herewhite.sdk.ConverterCallbacks;
 import com.herewhite.sdk.Room;
+import com.herewhite.sdk.RoomCallbacks;
 import com.herewhite.sdk.RoomParams;
 import com.herewhite.sdk.WhiteSdk;
 import com.herewhite.sdk.WhiteSdkConfiguration;
@@ -58,6 +59,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 
+import androidx.annotation.VisibleForTesting;
 import wendu.dsbridge.DWebView;
 
 
@@ -80,8 +82,13 @@ public class RoomActivity extends BaseActivity {
     private String token;
 
     WhiteboardView mWhiteboardView;
+    @VisibleForTesting
     WhiteSdk mWhiteSdk;
+    @VisibleForTesting
     Room mRoom;
+    @VisibleForTesting
+    RoomCallbacks mRoomCallbackHock = new AbstractRoomCallbacks() {
+    };
 
     /**
      * 自定义 GlobalState 示例
@@ -116,6 +123,7 @@ public class RoomActivity extends BaseActivity {
         client.setPptDirectory(getCacheDir().getAbsolutePath());
         mWhiteboardView.setWebViewClient(client);
 
+        // 测试支持
         testMarkIdling(false);
         String uuid = getIntent().getStringExtra(StartActivity.EXTRA_MESSAGE);
         if (uuid == null) {
@@ -175,7 +183,7 @@ public class RoomActivity extends BaseActivity {
         mWhiteSdk = new WhiteSdk(mWhiteboardView, this, configuration);
 
         //图片替换 API，需要在 whiteSDKConfig 中先行调用 setHasUrlInterrupterAPI，进行设置，否则不会被回调。
-        mWhiteSdk.setCommonCallbacks(new AbstractCommonCallbacks() {
+        mWhiteSdk.setCommonCallbacks(new CommonCallbacks() {
             @Override
             public String urlInterrupter(String sourceUrl) {
                 return sourceUrl;
@@ -183,16 +191,17 @@ public class RoomActivity extends BaseActivity {
 
             @Override
             public void onMessage(JSONObject message) {
-                super.onMessage(message);
+                Log.d(TAG, message.toString());
             }
 
             @Override
             public void sdkSetupFail(SDKError error) {
-                Log.e("ROOM_ERROR", error.toString());
+                Log.e(TAG, "sdkSetupFail " + error.toString());
             }
 
             @Override
             public void throwError(Object args) {
+                Log.e(TAG, "throwError " + args);
             }
 
             @Override
@@ -230,28 +239,49 @@ public class RoomActivity extends BaseActivity {
 
         final Date joinDate = new Date();
         logRoomInfo("native join " + joinDate);
-        mWhiteSdk.joinRoom(roomParams, new AbstractRoomCallbacks() {
+        mWhiteSdk.joinRoom(roomParams, new RoomCallbacks() {
             @Override
             public void onCanUndoStepsUpdate(long canUndoSteps) {
+                mRoomCallbackHock.onCanUndoStepsUpdate(canUndoSteps);
                 logRoomInfo("canUndoSteps: " + canUndoSteps);
-                super.onCanUndoStepsUpdate(canUndoSteps);
             }
 
             @Override
             public void onCanRedoStepsUpdate(long canRedoSteps) {
+                mRoomCallbackHock.onCanRedoStepsUpdate(canRedoSteps);
                 logRoomInfo("onCanRedoStepsUpdate: " + canRedoSteps);
-                super.onCanRedoStepsUpdate(canRedoSteps);
+            }
+
+            @Override
+            public void onCatchErrorWhenAppendFrame(long userId, Exception error) {
+                mRoomCallbackHock.onCatchErrorWhenAppendFrame(userId, error);
+                logRoomInfo("onCatchErrorWhenAppendFrame: " + userId + " error " + error.getMessage());
             }
 
             @Override
             public void onPhaseChanged(RoomPhase phase) {
+                mRoomCallbackHock.onPhaseChanged(phase);
                 //在此处可以处理断连后的重连逻辑
+                logRoomInfo("onPhaseChanged: " + phase.name());
                 showToast(phase.name());
             }
 
             @Override
+            public void onDisconnectWithError(Exception e) {
+                mRoomCallbackHock.onDisconnectWithError(e);
+                logRoomInfo("onDisconnectWithError: " + e.getMessage());
+            }
+
+            @Override
+            public void onKickedWithReason(String reason) {
+                mRoomCallbackHock.onKickedWithReason(reason);
+                logRoomInfo("onKickedWithReason: " + reason);
+            }
+
+            @Override
             public void onRoomStateChanged(RoomState modifyState) {
-                logRoomInfo(gson.toJson(modifyState));
+                mRoomCallbackHock.onRoomStateChanged(modifyState);
+                logRoomInfo("onRoomStateChanged:" + gson.toJson(modifyState));
             }
         }, new Promise<Room>() {
             @Override
@@ -266,6 +296,7 @@ public class RoomActivity extends BaseActivity {
 
             @Override
             public void catchEx(SDKError t) {
+                logRoomInfo("native join fail: " + t.getMessage());
                 showToast(t.getMessage());
             }
         });
@@ -308,15 +339,17 @@ public class RoomActivity extends BaseActivity {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        logRoomInfo("width:" + mWhiteboardView.getWidth() / getResources().getDisplayMetrics().density + " height: " + mWhiteboardView.getHeight() / getResources().getDisplayMetrics().density);
+        // Note：sdk内部已经实现size变更。
+        // 特别情况下出现页面异常状况，调用WhiteboardView.setAutoResize(false)禁用内部处理; 外部调用在合适时机调用Room.refreshViewSize()
+        // logRoomInfo("width:" + mWhiteboardView.getWidth() / getResources().getDisplayMetrics().density + " height: " + mWhiteboardView.getHeight() / getResources().getDisplayMetrics().density);
         // onConfigurationChanged 调用时，横竖屏切换并没有完成，需要延迟调用
-        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mRoom.refreshViewSize();
-                logRoomInfo("width:" + mWhiteboardView.getWidth() / getResources().getDisplayMetrics().density + " height: " + mWhiteboardView.getHeight() / getResources().getDisplayMetrics().density);
-            }
-        }, 1000);
+        // new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+        //     @Override
+        //     public void run() {
+        //         mRoom.refreshViewSize();
+        //         logRoomInfo("width:" + mWhiteboardView.getWidth() / getResources().getDisplayMetrics().density + " height: " + mWhiteboardView.getHeight() / getResources().getDisplayMetrics().density);
+        //     }
+        // }, 1000);
     }
 
     //endregion
@@ -430,13 +463,13 @@ public class RoomActivity extends BaseActivity {
             public void run() {
                 mRoom.undo();
             }
-        }, 10000);
+        }, 1000);
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 mRoom.redo();
             }
-        }, 15000);
+        }, 1500);
     }
 
     public void duplicate(MenuItem item) {

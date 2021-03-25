@@ -4,7 +4,7 @@ import com.herewhite.sdk.domain.EventEntry;
 import com.herewhite.sdk.domain.PlayerPhase;
 import com.herewhite.sdk.domain.SDKError;
 
-public interface PlayerDelegate {
+interface PlayerDelegate {
     void fireMagixEvent(EventEntry fromJson);
 
     void fireHighFrequencyEvent(EventEntry[] events);

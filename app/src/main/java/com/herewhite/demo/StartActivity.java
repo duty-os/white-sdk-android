@@ -10,8 +10,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 public class StartActivity extends AppCompatActivity {
-
     public static final String EXTRA_MESSAGE = "com.example.whiteSDKDemo.UUID";
+
     DemoAPI demoAPI = new DemoAPI();
 
     @Override
@@ -58,8 +58,8 @@ public class StartActivity extends AppCompatActivity {
             tokenAlert();
             return;
         }
-        Intent intent = new Intent(this, RoomActivity.class);
 
+        Intent intent = new Intent(this, RoomActivity.class);
         String uuid = getUuid();
         if (uuid.length() > 0) {
             intent.putExtra(EXTRA_MESSAGE, uuid);
